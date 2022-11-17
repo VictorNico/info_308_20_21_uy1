@@ -1,0 +1,345 @@
+---
+title: "TPE 3 INFO 308"
+output:
+  pdf_document: default
+  word_document: default
+  html_document:
+    df_print: paged
+---
+\centering
+
+
+### Jeudi le 10 juin 2021
+
+
+> **Membres du groupe**
+
+>> **BAKANG EKOSSO SALMA RIHANA 17T2229  rihana.bakang@facsciences-uy1.cm**
+>> 
+>> **DJIEMBOU TIENTCHEU VICTOR NICO 17T2051  nico.djiembou@facsciences-uy1.cm**
+>> 
+>> **KENFACK TEMGOUA VANESSA 17J2871 vanessa.kenfack@facsciences-uy1.cm**
+>> 
+>> **TITTI URSULA SOREL 17L2969  sorel.titti@facsciences-uy1.cm**
+> 
+
+\newpage
+
+### SOMMAIRE:
+
+#### Table de matiere:
+
+[I : Rediger un tutoriel pour l'installation de R sur votre machine](#installation-de-r-sur-votre-machine)
+
+[II : En utilisant la serie temporelle **AIrPassengers** du cour effectuer :](#serie-temporelle-airpassengers)
+
+  [1 : Une caracterisation complete](#caracterisation)
+  
+  [2 : Un lissage exponentiel simple](#lissage-exponentiel-simple-ou-lse)
+  
+  [3 : Un lissage exponentiel double](#lissage-exponentiel-double)
+  
+  [4 : Un lissage exponentiel saisonnier additif](#lissage-exponentiel-saisonnier-additif)
+  
+  [5 : Un lissage exponentiel saisonnier multifiplicatif](#lissage-exponentiel-saisonnier-multifiplicatif)
+  
+[III : Sur le meme jeu de donnees donnees, appliquer la methode de difference pour identifier la periode de la saisonnalite et le degre du polynome de la tendance](#methode-de-difference)
+
+
+
+\newpage
+
+
+### Installation de R sur votre machine
+
+#### Sous Mac OS
+
+Les étapes ci-dessous permettront d'installer Homebrew, R et RStudio. Ouvrez un terminal et exécutez les commandes suivantes.
+
+  1. Installez Homebrew.
+  
+> **usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"**
+
+  Cette commande va télécharger, installer et configurer Homebrew. La première fois qu'une commande brew est exécutée, elle demande un mot de passe.
+  
+  2. Installez R avec les commandes suivantes :
+  
+> **brew tap homebrew/science** # adds another source for applications.
+
+> **brew install r**            # runs installer of r
+
+  La première commande est nécessaire si vous souhaitez ajouter des applications de type scientifique/mathématique. La deuxième commande gère toute l'installation de R lui-même. Depuis la version 3.25.2017, elle installe la version . Cela peut prendre un certain temps car Homebrew télécharge puis construit les outils, bien que cela tende à être plus rapide et plus facile que l'installation manuelle.
+  
+  3. Installez RStudio avec la commande suivante :
+  
+> **brew cask install rstudio**
+
+  Essayez de naviguer vers RStudio pour vérifier l'installation.
+  
+  4. Facultatif Configurer RStudio pour travailler à partir de la ligne de commande.
+  
+> **echo "alias rstudio='open -a RStudio'" >> ~/.bash_profile**
+
+> **source ~/.bash_profile**
+
+  Cela configure votre profil bash pour lancer RStudio lorsque rstudio est entré dans la ligne de commande (c'est-à-dire rstudio exemple.rmd). Elle ajoute un alias à votre ~/.bash_profile pour que vous puissiez le supprimer si vous le souhaitez.
+
+
+#### Sous Ubuntu
+
+
+Voici la marche à suivre, en ligne de commande :
+
+1. Comme toujours, mettez à jour vos dépôts et vos logiciels :
+
+> **sudo apt update**
+
+> **sudo apt -y upgrade**
+
+2. Installez le package qui permet d’ajouter des dépôts depuis https :
+
+> **sudo apt install apt-transport-https software-properties-common**
+
+3. Ajoutez le dépôt CRAN à votre liste de dépôts, et la clé GPG associée :
+
+> **sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57\\CBB651716619E084DAB9**
+
+> **sudo add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran35/'**
+
+4. Mettez à jour la liste des dépôts :
+
+> **sudo apt update**
+
+5. Installez le package r-base 
+
+> **sudo apt install r-base**
+
+
+6. Installer RStudio
+
+  * Allez sur la page de téléchargement de RStudio Desktop (version Open Source) : rstudio.com/products/rstudio/download ;
+  * Téléchargez le fichier d’installation compatible avec votre système d’exploitation (Mac, Windows ou Linux) et installez-le ;
+  * Pour les utilisateurs de Linux Ubuntu : téléchargez le fichier .deb et ouvrez-le avec la Logithèque.
+
+
+
+#### Sous Windows
+
+
+1. Téléchargez la dernière version de R : cran.r-project.org/bin/windows/base
+2. Enregistrez le fichier d’installation et exécutez-le ;
+3. Vérifiez que l’installation a été effectuée en cliquant sur la magnifique icône qui s’affiche sur le bureau et dans le menu Démarrer.
+
+
+# Serie temporelle AirPassengers
+***NB***: Dans chaque cas, les donnees doivent etre decoupees en donnees d'apprentisage et du test, et le RMSE doit etre calculer sur donnees de test de chaque model
+
+1. **Importation de AirPassengers**
+
+```{r}
+data("AirPassengers")
+str(AirPassengers)
+```
+
+2. **Affichage de la serie temporelle de AirPassengers**
+```{r}
+plot(AirPassengers)
+```
+
+3. **Description de AirPassengers**
+```{r}
+summary(AirPassengers)
+```
+
+4. **Decomposer en donnees d'apprentissage et de test**
+```{r}
+airpassengers_app <- ts(AirPassengers[1:115],start=c(1949,1),end=c(1957,12),freq=12) 
+airpassengers_test <- ts(AirPassengers[116:144],start=c(1958,1),end=c(1960,6),freq=12)
+airpassengers_test
+```
+
+
+## Caracterisation
+
+1. **Moyenne de AirPassengers**
+```{r}
+mean(AirPassengers)
+```
+
+```{r}
+mean(airpassengers_app)
+```
+
+
+```{r}
+mean(airpassengers_test)
+```
+
+2. **Variance de AirPassengers**
+```{r}
+var(AirPassengers)
+```
+
+```{r}
+var(airpassengers_app)
+```
+
+```{r}
+var(airpassengers_test)
+```
+
+3. **Ecart-Type de AirPassengers**
+```{r}
+sd(AirPassengers)
+```
+
+```{r}
+sd(airpassengers_app)
+```
+
+
+```{r}
+sd(airpassengers_test)
+```
+
+4. **Auto-Covariance de AirPassengers**
+```{r}
+tmp=acf(AirPassengers,type="cov",plot = TRUE)
+```
+```{r}
+print(tmp)
+```
+
+```{r}
+tmp=acf(airpassengers_app,type="cov",plot = TRUE)
+```
+
+```{r}
+print(tmp)
+```
+
+```{r}
+tmp=acf(airpassengers_test,type="cov",plot = TRUE)
+```
+
+```{r}
+print(tmp)
+```
+
+5. **Auto-Correlation de AirPassengers**
+```{r}
+tmp=acf(AirPassengers,type="cor",plot = TRUE)
+```
+```{r}
+print(tmp)
+```
+
+6. **Auto-Correlation Partielle de AirPassengers**
+```{r}
+tmp=pacf(AirPassengers,plot = TRUE)
+```
+```{r}
+print(tmp)
+```
+
+```{r}
+tmp=pacf(airpassengers_app,plot = TRUE)
+```
+
+```{r}
+print(tmp)
+```
+
+```{r}
+tmp=pacf(airpassengers_test,plot = TRUE)
+```
+
+```{r}
+print(tmp)
+```
+
+## Lissage exponentiel simple ou LSE
+```{r}
+plot(airpassengers_app,xlim=c(1949,1960))
+lines(airpassengers_test,col=2) 
+LES=HoltWinters(airpassengers_app,alpha=NULL,beta=FALSE,gamma=FALSE) 
+p1<-predict(LES,n.ahead=20)
+lines(p1,col=3)
+```
+```{r}
+library(caret)
+caret::RMSE(p1,airpassengers_test)
+```
+
+## Lissage exponentiel double
+```{r}
+LES2=HoltWinters(airpassengers_app,alpha=NULL,beta=NULL,gamma=FALSE) 
+p2<-predict(LES2,n.ahead=18) 
+plot(airpassengers_app,xlim=c(1949,1960)) 
+lines(airpassengers_test,col=2)
+lines(p1,col=3) 
+lines(p2,col=4)
+```
+```{r}
+caret::RMSE(airpassengers_test,p2)
+```
+## Lissage exponentiel saisonnier additif
+```{r}
+LES3=HoltWinters(airpassengers_app,alpha=NULL,beta=NULL,gamma=NULL) 
+p3<-predict(LES3,n.ahead=18) 
+plot(airpassengers_app,xlim=c(1949,1960)) 
+lines(airpassengers_test,col=2)
+lines(p1,col=3) 
+lines(p2,col=4) 
+lines(p3,col=5)
+```
+```{r}
+caret::RMSE(airpassengers_test,p3)
+```
+## Lissage exponentiel saisonnier multifiplicatif
+```{r}
+LES=HoltWinters(airpassengers_app,alpha=NULL,beta=NULL,gamma=NULL,seasonal = "multi") 
+plot(airpassengers_app,xlim=c(1949,1960)) 
+lines(airpassengers_test,col=3)
+p<-predict(LES,n.ahead=18) 
+lines(p,col=2)
+```
+
+```{r}
+caret::RMSE(airpassengers_test,p)
+```
+# Methode de difference
+```{r}
+par(mfrow=c(2,1))
+plot(airpassengers_app) # nous constatons que nous avons une periode de 24 mois, une tendance approximativement lineaire croissante
+plot(diff(airpassengers_app,lag=24,differences=1)) # nous observons une saisonnalite tres legere mais pas visible a l'oeil nu
+```
+
+```{r}
+par(mfrow=c(2,1))
+seriediff=diff(airpassengers_app,lag = 24,differences = 1)
+plot(seriediff) # Cela semble à l’oeil approximativement stationnaire
+acf(seriediff) # nous ne pouvons plus parler de tendance, ni de saisonnalite donc nous avons un bruit blanc 
+```
+
+
+```{r}
+par(mfrow=c(2,1))
+plot(airpassengers_test) # nous constatons que nous avons une periode de 12 mois, une tendance approximativement lineaire croissante
+plot(diff(airpassengers_test,lag=12,differences=1)) # Cela semble à l’oeil approximativement stationnaire
+```
+
+```{r}
+par(mfrow=c(2,1))
+seriediff=diff(airpassengers_test,lag = 12,differences = 1)
+plot(seriediff) # Cela semble à l’oeil approximativement stationnaire
+acf(seriediff) # nous ne pouvons plus parler de tendance, ni de saisonnalite donc nous avons un bruit blanc 
+```
+
+### pour le jeu d'apprentissage, nous avons:
+  * **saisonnalite** = 24 mois
+  * **tendance** == lineaire (degre k=1)
+
+### pour le jeu d'apprentissage, nous avons:
+  * **saisonnalite** = 12 mois
+  * **tendance** == lineaire (degre k=1)
